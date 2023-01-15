@@ -37,7 +37,7 @@
 
   //variables for Handsontable
   var columns = {{columns|safe}}; 
-  const data = [
+  var data = [
                 {% for row in rows %}
                 {{row|safe}},
                 {% endfor %}
@@ -46,7 +46,9 @@
   const container = document.querySelector('#spreadsheet_div');
   var changedRowIds = [];
   var None = '';
-
+  if(data.length == 0)
+    data = [[0]]
+  console.log(data)
   //intializing Handsontable
   const hot = new Handsontable(container, {
     data: data,
@@ -68,7 +70,9 @@
       copyPasteEnabled: false
     },
     columnSorting: true,
-    sortIndicator: true
+    sortIndicator: true,
+    minCols: 8,
+    //minSpareRows: 1,
   });
 
   const outputConsole = document.querySelector('#output');
@@ -92,6 +96,7 @@
       .then(response => {
         outputConsole.innerText = 'Data saved';
         var changedRowIds = [];
+        location.reload();
       });
   });
 
