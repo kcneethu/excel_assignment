@@ -7,7 +7,8 @@ from django.db import transaction
 import json
 import datetime
 
-# Create your views here.
+
+#listing view of excel elements
 def index(request):
     all_data = Exceldata.objects.all()
     datas = { 
@@ -15,28 +16,28 @@ def index(request):
         }
     return render(request,'index.html',datas)
 
+#show excel
 def show_excel(request):
-    all_fields =  [field.name for field in Exceldata._meta.get_fields() if field.name not in ('updated_at', 'created_at')]
-    
-    data_obj = Exceldata.objects.all().values_list(*all_fields)
-    row_data = np.array(list(data_obj)).tolist()
-    row_data.append(['', '', '', '', '', '', '', ''])
+    all_fields  =  [field.name for field in Exceldata._meta.get_fields() if field.name not in ('updated_at', 'created_at')]
+    data_obj    = Exceldata.objects.all().values_list(*all_fields)
+    row_data    = np.array(list(data_obj)).tolist() #spreadsheet row datas
+    #row_data.append(['', '', '', '', '', '', '', ''])
     ss_data = { 
           'columns' : all_fields,
           'rows'    : row_data
         }
-
     return render(request,'excel.html',ss_data)
 
+#save excel data
 def save_excel(request):
     jsonData = request.POST['data']
     changedRowIds = request.POST['changedRowIds']
-    json_object = json.loads(jsonData)
+    json_object   = json.loads(jsonData)
 
     for item in json_object:
         try:
             data_id = str(item[0])
-            if data_id==0 or data_id=='' or data_id=='None':
+            if data_id==0 or data_id=='' or data_id=='None': #insert new item
                 Exceldata.objects.create(
                     color   = check_empty(item[1]),
                     group   = check_empty(item[2]),
@@ -47,7 +48,7 @@ def save_excel(request):
                     amount  = check_empty(item[7],'int'),
                     created_at = datetime.date.today()
                 )
-            elif data_id in changedRowIds:
+            elif data_id in changedRowIds: #update existing item
                 ExcelTb         = Exceldata.objects.get(data_id=data_id)
                 ExcelTb.color   = check_empty(item[1]),
                 ExcelTb.group   = check_empty(item[2]),

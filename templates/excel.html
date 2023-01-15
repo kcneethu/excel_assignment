@@ -1,24 +1,23 @@
 {% extends 'layout.html' %}
 
-
+<!-- CSS file for page -->
 {% block css_files %}
   {% load static %}
   <link rel="stylesheet" href="{% static 'css/handsontable.full.min.css' %}" />
 {% endblock %}
 
-
+<!-- Content of page -->
 {% block content %}
   <div class='row'>
     <h2> Assignment </h2>
   </div>
 
-  
   <input type="file" name="file" id="file" class="btn btn-info">
-  <div id='output'>
+  <div id='csv_output'>
   </div>
   <br>
-  
-  <div id="example"></div>
+
+  <div id="spreadsheet_div"></div>
   
 
   <pre id="out"><p></p></pre>
@@ -31,100 +30,104 @@
 
 {% endblock %}
 
-
+<!-- Custom Javascript of page -->
 {% block js_files %}
 <script type="text/javascript" src="{% static 'js/handsontable.full.min.js' %}"></script>
 <script>
+
+  //variables for Handsontable
   var columns = {{columns|safe}}; 
   const data = [
- // columns,
-  {% for row in rows %}
-  {{row|safe}},
-  {% endfor %}
-  
-];
+                {% for row in rows %}
+                {{row|safe}},
+                {% endfor %}
+              ];
 
-const container = document.querySelector('#example');
+  const container = document.querySelector('#spreadsheet_div');
+  var changedRowIds = [];
+  var None = '';
 
-var changedRowIds = [];
-var None = '';
-const hot = new Handsontable(container, {
-  data: data,
-  rowHeaders: true,
-  colHeaders:{{columns|safe}},
-  height: 'auto',
-  licenseKey: 'non-commercial-and-evaluation', // for non-commercial use only
-  afterChange: (changes) => {
-    changes?.forEach(([row, prop, oldValue, newValue]) => {
-      var rowArr = hot.getDataAtRow(changes[0][0])
-      let row_id = rowArr[0];
-      if(row_id!=='' && row_id!==null)
-        changedRowIds.push(row_id)
-    });
-  },
-  hiddenColumns: {
-    columns: [0],
-    indicators: true,
-    copyPasteEnabled: false
-  },
-  columnSorting: true,
-  sortIndicator: true
-
-  
-});
-
-const outputConsole = document.querySelector('#output');
-const save = document.querySelector('#save');
-save.addEventListener('click', () => {
-  let data = new FormData();
-  data.append('csrfmiddlewaretoken', $('input[name=csrfmiddlewaretoken]').val());
-  data.append( 'data' , JSON.stringify( hot.getData() ) );
-  data.append('changedRowIds',changedRowIds);
-  // save all cell's data
-  fetch("{% url 'save_excel' %}", {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: {
-      'Content-Type': 'application/json',
+  //intializing Handsontable
+  const hot = new Handsontable(container, {
+    data: data,
+    rowHeaders: true,
+    colHeaders:{{columns|safe}},
+    height: 'auto',
+    licenseKey: 'non-commercial-and-evaluation', // for non-commercial use only
+    afterChange: (changes) => {
+      changes?.forEach(([row, prop, oldValue, newValue]) => {
+        var rowArr = hot.getDataAtRow(changes[0][0])
+        let row_id = rowArr[0];
+        if(row_id!=='' && row_id!==null)
+          changedRowIds.push(row_id)
+      });
     },
-    body: data,
-  })
-    .then(response => {
-      outputConsole.innerText = 'Data saved';
-      var changedRowIds = [];
-    });
-});
+    hiddenColumns: {
+      columns: [0],
+      indicators: true,
+      copyPasteEnabled: false
+    },
+    columnSorting: true,
+    sortIndicator: true
+  });
+
+  const outputConsole = document.querySelector('#output');
+  const save = document.querySelector('#save');
+
+  //saving spreadsheet data
+  save.addEventListener('click', () => {
+      let data = new FormData();
+      data.append('csrfmiddlewaretoken', $('input[name=csrfmiddlewaretoken]').val());
+      data.append( 'data' , JSON.stringify( hot.getData() ) );
+      data.append('changedRowIds',changedRowIds);
+      
+      fetch("{% url 'save_excel' %}", {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: data,
+      })
+      .then(response => {
+        outputConsole.innerText = 'Data saved';
+        var changedRowIds = [];
+      });
+  });
 
 
-const $output = document.getElementById('output')
-document.getElementById('file').onchange = function() {
-  var file = this.files[0];
+  const $csv_output = document.getElementById('csv_output')
+  
+  //load data on csv file upload
+  document.getElementById('file').onchange = function() {
+    var file = this.files[0];
 
-  var reader = new FileReader();
-  reader.onload = function(progressEvent) {
-    // Entire file
-    const text = this.result;
-    $output.innerText = 'CSV file uploaded'
+    var reader = new FileReader();
+    reader.onload = function(progressEvent) {
+      // Entire file
+      const text = this.result;
+      $csv_output.innerText = 'CSV file uploaded'
 
-    // By lines
-    var lines = text.split('\n');
-    for (var line = 0; line < lines.length; line++) {
-      var lineArr = lines[line].split(",");
-      var col = hot.countRows();
-      hot.alter('insert_row', col, 1);
-      hot.setDataAtCell(col, 1, lineArr[0]);
-      hot.setDataAtCell(col, 2, lineArr[1]);
-      hot.setDataAtCell(col, 3, lineArr[2])
-      hot.setDataAtCell(col, 4, lineArr[3]);
-      hot.setDataAtCell(col, 5, lineArr[4]);
-      hot.setDataAtCell(col, 6, lineArr[5]);
-      hot.setDataAtCell(col, 7, lineArr[6]);
-    }
+      // By lines
+      var lines = text.split('\n');
+      for (var line = 0; line < lines.length; line++) {
+        var lineArr = lines[line].split(",");
+        var col = hot.countRows();
+        //insert column to spreadsheet with data
+        hot.alter('insert_row', col, 1);
+        hot.setDataAtCell(col, 1, lineArr[0]);
+        hot.setDataAtCell(col, 2, lineArr[1]);
+        hot.setDataAtCell(col, 3, lineArr[2])
+        hot.setDataAtCell(col, 4, lineArr[3]);
+        hot.setDataAtCell(col, 5, lineArr[4]);
+        hot.setDataAtCell(col, 6, lineArr[5]);
+        hot.setDataAtCell(col, 7, lineArr[6]);
+      }
+    };
+    reader.readAsText(file);
   };
-  reader.readAsText(file);
-};
-
 
 </script>
+
 {% endblock %}
             
