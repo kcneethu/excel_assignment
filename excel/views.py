@@ -49,15 +49,16 @@ def save_excel(request):
                     created_at = datetime.date.today()
                 )
             elif data_id in changedRowIds: #update existing item
-                ExcelTb         = Exceldata.objects.get(data_id=data_id)
-                ExcelTb.color   = check_empty(item[1]),
-                ExcelTb.group   = check_empty(item[2]),
-                ExcelTb.size    = check_empty(item[3],'int'),
-                ExcelTb.article = check_empty(item[4]),
-                ExcelTb.pairs   = check_empty(item[5],'int'),
-                ExcelTb.rate    = check_empty(item[6],'int'),
-                ExcelTb.amount  = check_empty(item[7],'int'),
-                ExcelTb.save()
+                Exceldata.objects.filter(data_id=data_id).update(
+                            color   = check_empty(item[1]),
+                            group   = check_empty(item[2]),
+                            size    = check_empty(item[3],'int'),
+                            article = check_empty(item[4]),
+                            pairs   = check_empty(item[5],'int'),
+                            rate    = check_empty(item[6],'int'),
+                            amount  = check_empty(item[7],'int'),
+                            updated_at = datetime.date.today()
+                            )
             message = 'success'
         except Exception as e:
             message = 'failed'

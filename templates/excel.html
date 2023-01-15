@@ -61,7 +61,7 @@
         var rowArr = hot.getDataAtRow(changes[0][0])
         let row_id = rowArr[0];
         if(row_id!=='' && row_id!==null)
-          changedRowIds.push(row_id)
+          changedRowIds.push(String(row_id))
       });
     },
     hiddenColumns: {
