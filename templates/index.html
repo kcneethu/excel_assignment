@@ -1,0 +1,23 @@
+
+{% extends 'layout.html' %}
+{% block content %}
+  <div class="row">
+    {% for data in list_datas %}
+      <div class="col-md-4">
+        <div class="card mb-4 box-shadow">
+          
+            <div class="h-100 small-box" style="background-color:{{data.color}};">
+              <h4> Group :   {{data.group}} </h4>
+              <h4> Size :    {{data.size}} </h4>
+              <h4> Pairs :   {{data.pairs}} </h4>
+              <h4> Article : {{data.article}} </h4>
+              <h4> Amount :  {{data.amount}} </h4>
+            </div>
+        
+        
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endblock %}
+            

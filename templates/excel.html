@@ -1,0 +1,130 @@
+{% extends 'layout.html' %}
+
+
+{% block css_files %}
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/handsontable.full.min.css' %}" />
+{% endblock %}
+
+
+{% block content %}
+  <div class='row'>
+    <h2> Assignment </h2>
+  </div>
+
+  
+  <input type="file" name="file" id="file" class="btn btn-info">
+  <div id='output'>
+  </div>
+  <br>
+  
+  <div id="example"></div>
+  
+
+  <pre id="out"><p></p></pre>
+
+
+  <button id="save" class="button button--primary button--blue btn btn-primary">Save data</button>
+  <span id="output" style="color:green"> </span>
+
+  <input type='hidden' name='csrfmiddlewaretoken' value='{{ csrf_token }}' /> 
+
+{% endblock %}
+
+
+{% block js_files %}
+<script type="text/javascript" src="{% static 'js/handsontable.full.min.js' %}"></script>
+<script>
+  var columns = {{columns|safe}}; 
+  const data = [
+ // columns,
+  {% for row in rows %}
+  {{row|safe}},
+  {% endfor %}
+  
+];
+
+const container = document.querySelector('#example');
+
+var changedRowIds = [];
+var None = '';
+const hot = new Handsontable(container, {
+  data: data,
+  rowHeaders: true,
+  colHeaders:{{columns|safe}},
+  height: 'auto',
+  licenseKey: 'non-commercial-and-evaluation', // for non-commercial use only
+  afterChange: (changes) => {
+    changes?.forEach(([row, prop, oldValue, newValue]) => {
+      var rowArr = hot.getDataAtRow(changes[0][0])
+      let row_id = rowArr[0];
+      if(row_id!=='' && row_id!==null)
+        changedRowIds.push(row_id)
+    });
+  },
+  hiddenColumns: {
+    columns: [0],
+    indicators: true,
+    copyPasteEnabled: false
+  },
+  columnSorting: true,
+  sortIndicator: true
+
+  
+});
+
+const outputConsole = document.querySelector('#output');
+const save = document.querySelector('#save');
+save.addEventListener('click', () => {
+  let data = new FormData();
+  data.append('csrfmiddlewaretoken', $('input[name=csrfmiddlewaretoken]').val());
+  data.append( 'data' , JSON.stringify( hot.getData() ) );
+  data.append('changedRowIds',changedRowIds);
+  // save all cell's data
+  fetch("{% url 'save_excel' %}", {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: data,
+  })
+    .then(response => {
+      outputConsole.innerText = 'Data saved';
+      var changedRowIds = [];
+    });
+});
+
+
+const $output = document.getElementById('output')
+document.getElementById('file').onchange = function() {
+  var file = this.files[0];
+
+  var reader = new FileReader();
+  reader.onload = function(progressEvent) {
+    // Entire file
+    const text = this.result;
+    $output.innerText = 'CSV file uploaded'
+
+    // By lines
+    var lines = text.split('\n');
+    for (var line = 0; line < lines.length; line++) {
+      var lineArr = lines[line].split(",");
+      var col = hot.countRows();
+      hot.alter('insert_row', col, 1);
+      hot.setDataAtCell(col, 1, lineArr[0]);
+      hot.setDataAtCell(col, 2, lineArr[1]);
+      hot.setDataAtCell(col, 3, lineArr[2])
+      hot.setDataAtCell(col, 4, lineArr[3]);
+      hot.setDataAtCell(col, 5, lineArr[4]);
+      hot.setDataAtCell(col, 6, lineArr[5]);
+      hot.setDataAtCell(col, 7, lineArr[6]);
+    }
+  };
+  reader.readAsText(file);
+};
+
+
+</script>
+{% endblock %}
+            
