@@ -2,8 +2,16 @@
 
 Used [handsontable](https://handsontable.com/) plugin for spreadsheet
 
-home page
-<p align="center">
-  <img src="https://raw.githubusercontent.com/kcneethu/excel_assignment/main/excel/static/images/Assignment.png" width="350" alt="home page">
+## Listing Home page
+<p>
+  <img src="https://raw.githubusercontent.com/kcneethu/excel_assignment/main/excel/static/images/Assignment.png" width="450" alt="home page">
 </p>
+
+
+## Add excel data page
+<p>
+  <img src="https://raw.githubusercontent.com/kcneethu/excel_assignment/main/excel/static/images/Assignment.png" width="450" alt="home page">
+</p>
+
+Upload csv option and sorting is available
 
